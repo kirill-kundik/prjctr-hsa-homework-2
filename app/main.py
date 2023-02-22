@@ -68,19 +68,20 @@ async def index():
     action = random.choice(actions)
     type_ = random.choice(types)
 
-    with stats.pipeline() as pipe:
-        if type_ == "elastic":
-            if action == "create":
-                await ingest_elastic()
-            else:
-                await search_elastic()
+    if type_ == "elastic":
+        if action == "create":
+            await ingest_elastic()
         else:
-            if action == "create":
-                await insert_mongo()
-            else:
-                await query_mongo()
+            await search_elastic()
+    else:
+        if action == "create":
+            await insert_mongo()
+        else:
+            await query_mongo()
 
-        executed_time_ms = (time.monotonic_ns() - start) // 1_000_000
+    executed_time_ms = (time.monotonic_ns() - start) // 1_000_000
+
+    with stats.pipeline() as pipe:
         pipe.incr(f'request.successful.count,type={type_},action={action}', 1)
         pipe.timing(f'request.successful.time,type={type_},action={action}', executed_time_ms)
 

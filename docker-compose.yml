@@ -85,6 +85,7 @@ services:
   app:
     build:
       context: app
+    restart: always
     depends_on:
       - telegraf
       - elasticsearch

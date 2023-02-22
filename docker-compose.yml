@@ -1,32 +1,51 @@
-version: '3.6'
+version: '3.9'
 services:
-  telegraf:
-    image: telegraf:1.18-alpine
+  socket-proxy:
+    image: tecnativa/docker-socket-proxy
+    container_name: socket-proxy
+    restart: unless-stopped
+    environment:
+      CONTAINERS: 1
+      INFO: 1
+      IMAGES: 1
+      NETWORKS: 1
+      NODES: 1
+      PLUGINS: 1
+      SERVICES: 1
+      SYSTEM: 1
+      TASKS: 1
+      VOLUMES: 1
     volumes:
-    - ./telegraf/etc/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+      - '2375:2375'
+
+  telegraf:
+    image: telegraf:1.25-alpine
+    container_name: telegraf
+    volumes:
+      - ./telegraf/etc/telegraf.conf:/etc/telegraf/telegraf.conf:ro
     depends_on:
       - influxdb
-    links:
-      - influxdb
+      - socket-proxy
+      - elasticsearch
+      - mongodb
     ports:
-    - '127.0.0.1:8125:8125/udp'
+      - '8125:8125/udp'
 
   influxdb:
     image: influxdb:1.8-alpine
     env_file: configuration.env
     ports:
-      - '127.0.0.1:8086:8086'
+      - '8086:8086'
     volumes:
-      - ./:/imports
       - influxdb_data:/var/lib/influxdb
 
   grafana:
-    image: grafana/grafana:8.0.2
+    image: grafana/grafana:9.3.0
     depends_on:
       - influxdb
     env_file: configuration.env
-    links:
-      - influxdb
     ports:
       - '127.0.0.1:3000:3000'
     volumes:
@@ -34,6 +53,39 @@ services:
       - ./grafana/provisioning/:/etc/grafana/provisioning/
       - ./grafana/dashboards/:/var/lib/grafana/dashboards/
 
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.9
+    environment:
+      - bootstrap.memory_lock=true
+      - cluster.name=docker-cluster
+      - cluster.routing.allocation.disk.threshold_enabled=false
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-XX:UseAVX=2 -Xms1g -Xmx1g
+    ulimits:
+      memlock:
+        hard: -1
+        soft: -1
+    volumes:
+      - elastic_data:/usr/share/elasticsearch/data
+    ports:
+      - '9200:9200'
+    healthcheck:
+      interval: 30s
+      retries: 10
+      test: curl -s http://localhost:9200/_cluster/health | grep -vq '"status":"red"'
+
+  mongodb:
+    image: mongo:latest
+    env_file: configuration.env
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    command:
+      mongod --quiet --logpath /dev/null
+
 volumes:
-  grafana_data: {}
-  influxdb_data: {}
+  grafana_data: { }
+  influxdb_data: { }
+  elastic_data: { }
+  mongo_data: {  }

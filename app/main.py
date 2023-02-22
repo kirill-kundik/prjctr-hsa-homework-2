@@ -62,7 +62,7 @@ async def query_mongo():
 
 @app.get("/")
 async def index():
-    start = time.time()
+    start = time.monotonic_ns()
     actions = ["create", "search"]
     types = ["elastic", "mongo"]
     action = random.choice(actions)
@@ -80,7 +80,8 @@ async def index():
             else:
                 await query_mongo()
 
+        executed_time_ms = (time.monotonic_ns() - start) // 1_000_000
         pipe.incr(f'request.successful.count,type={type_},action={action}', 1)
-        pipe.timing(f'request.successful.time,type={type_},action={action}', time.time() - start)
+        pipe.timing(f'request.successful.time,type={type_},action={action}', executed_time_ms)
 
     return {"status": "ok"}

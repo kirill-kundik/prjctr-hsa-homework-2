@@ -84,8 +84,20 @@ services:
     command:
       mongod --quiet --logpath /dev/null
 
+  app:
+    container_name: app
+    build:
+      context: app
+    depends_on:
+      - telegraf
+      - elasticsearch
+      - mongodb
+    env_file: configuration.env
+    ports:
+      - "127.0.0.1:8080:8080"
+
 volumes:
   grafana_data: { }
   influxdb_data: { }
   elastic_data: { }
-  mongo_data: {  }
+  mongo_data: { }

@@ -1,0 +1,7 @@
+aiohttp==3.8.4
+elasticsearch==8.6.2
+Faker==17.0.0
+fastapi==0.92.0
+motor==3.1.1
+statsd==4.0.1
+uvicorn==0.20.0

@@ -17,7 +17,7 @@ The full list of services:
 $ docker-compose up
 ```
 
-## Services and Ports
+## Services description
 
 ### FastAPI App
 - URL: http://localhost:8181/
@@ -53,7 +53,7 @@ $ docker-compose up
 - Port: 2375
 
 
-## Run the AB benchmark testing
+## Run the Apache Benchmarking tool
 
 ```bash
 $ ab -n 100000 -c 100 http://127.0.0.1:8181/
@@ -102,9 +102,9 @@ Percentage of the requests served within a certain time (ms)
  100%   4614 (longest request)
 ```
 
-### Grafana Dashboards under benchmarking
+### Grafana Dashboards while benchmarking
 
-#### FastAPI webserver performance metrics
+#### FastAPI performance metrics
 
 ![FastAPI webserver performance metrics](./images/fastapi_performance_metrics.png)
 

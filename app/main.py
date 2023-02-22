@@ -60,24 +60,22 @@ async def query_mongo():
     await cursor.to_list(length=100)
 
 
+actions_table = {
+    "elastic": {"create": ingest_elastic, "search": search_elastic},
+    "mongo": {"create": insert_mongo, "search": query_mongo},
+}
+
+
 @app.get("/")
 async def index():
     start = time.monotonic_ns()
+
     actions = ["create", "search"]
     types = ["elastic", "mongo"]
     action = random.choice(actions)
     type_ = random.choice(types)
 
-    if type_ == "elastic":
-        if action == "create":
-            await ingest_elastic()
-        else:
-            await search_elastic()
-    else:
-        if action == "create":
-            await insert_mongo()
-        else:
-            await query_mongo()
+    await actions_table[type_][action]()
 
     executed_time_ms = (time.monotonic_ns() - start) // 1_000_000
 
